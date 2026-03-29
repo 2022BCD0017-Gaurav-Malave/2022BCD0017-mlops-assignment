@@ -1,8 +1,0 @@
-#!/bin/sh
-'''exec' "/home/nightfury653/Documents/College Studies/Sem8/MLOPS/2022BCD0017-mlops-assignment/venv/bin/python3" "$0" "$@"
-' '''
-import sys
-from typer.cli import main
-if __name__ == '__main__':
-    sys.argv[0] = sys.argv[0].removesuffix('.exe')
-    sys.exit(main())
