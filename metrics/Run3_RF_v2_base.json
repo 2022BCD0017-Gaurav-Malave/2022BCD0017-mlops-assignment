@@ -1,0 +1,15 @@
+{
+  "name": "Gaurav Malave",
+  "roll_no": "2022BCD0017",
+  "run_name": "Run3_RF_v2_base",
+  "data_version": "v2",
+  "model_type": "RandomForest",
+  "accuracy": 1.0,
+  "f1_score": 1.0,
+  "features": [
+    "sepal length (cm)",
+    "sepal width (cm)",
+    "petal length (cm)",
+    "petal width (cm)"
+  ]
+}

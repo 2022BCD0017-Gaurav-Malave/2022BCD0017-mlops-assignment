@@ -1,0 +1,23 @@
+artifact_path: /home/nightfury653/Documents/College Studies/Sem8/MLOPS/2022BCD0017-mlops-assignment/mlruns/1/models/m-694366b54efb43beb68a2fddd046477e/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+    skops_trusted_types: null
+mlflow_version: 3.10.1
+model_id: m-694366b54efb43beb68a2fddd046477e
+model_size_bytes: 177230
+model_uuid: m-694366b54efb43beb68a2fddd046477e
+prompts: null
+run_id: d24b5953c82e4a6dab2cd5ad74bc5ac4
+utc_time_created: '2026-03-29 13:25:52.591756'

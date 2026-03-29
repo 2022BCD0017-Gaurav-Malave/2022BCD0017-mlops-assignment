@@ -1,0 +1,67 @@
+name: MLOps Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  mlops-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Step 1: Checkout code ──────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # ── Step 2: Set up Python ──────────────────────────────────
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # ── Step 3: Install dependencies ──────────────────────────
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ── Step 4: Configure DVC remote credentials ───────────────
+      - name: Configure DVC S3 credentials
+        run: |
+          dvc remote modify myremote access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          dvc remote modify myremote secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # ── Step 5: Pull data from DVC/S3 ─────────────────────────
+      - name: Pull data with DVC
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: dvc pull
+
+      # ── Step 6: Run all 5 training runs with MLflow ───────────
+      - name: Run MLflow experiments
+        env:
+          MLFLOW_TRACKING_URI:      ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: python train.py --run 0
+
+      # ── Step 7: Upload metrics as artifact ────────────────────
+      - name: Upload metrics
+        uses: actions/upload-artifact@v3
+        with:
+          name: experiment-metrics
+          path: metrics/
+
+      # ── Step 8: Build Docker image ────────────────────────────
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest .
+
+      # ── Step 9: Push to Docker Hub ────────────────────────────
+      - name: Login and push to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest

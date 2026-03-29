@@ -1,0 +1,13 @@
+{
+  "name": "Gaurav Malave",
+  "roll_no": "2022BCD0017",
+  "run_name": "Run5_LR_v2_feat_select",
+  "data_version": "v2",
+  "model_type": "LogisticRegression",
+  "accuracy": 0.9,
+  "f1_score": 0.8992,
+  "features": [
+    "sepal length (cm)",
+    "sepal width (cm)"
+  ]
+}
