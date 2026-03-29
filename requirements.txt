@@ -7,3 +7,4 @@ numpy
 dvc[s3]
 boto3
 joblib
+dagshub
