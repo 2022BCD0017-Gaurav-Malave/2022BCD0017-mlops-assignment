@@ -5,8 +5,7 @@ import joblib
 import pandas as pd
 import numpy as np
 import mlflow
-import mlflow.sklearn
-import dagshub  
+import mlflow.sklearn 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -16,13 +15,11 @@ from sklearn.metrics import accuracy_score, f1_score
 STUDENT_NAME = "Gaurav Malave"      
 ROLL_NO      = "2022BCD0017"   
 
-dagshub.init(
-    repo_owner="2022BCD0017-Gaurav-Malave",
-    repo_name="2022BCD0017-mlops-assignment",
-    mlflow=True
-)
+os.environ["MLFLOW_TRACKING_URI"]      = os.getenv("MLFLOW_TRACKING_URI", "mlruns")
+os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "2022BCD0017-Gaurav-Malave")
+os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD", "344b8db17a5bbf283371538f89982219960ad5cf")
 
-mlflow.set_experiment("2022BCD0017_experiment")
+mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
 
 def load_data(csv_path, feature_set="all"):
     df = pd.read_csv(csv_path)
