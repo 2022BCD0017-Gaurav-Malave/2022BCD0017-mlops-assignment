@@ -58,12 +58,14 @@ jobs:
       # ── Step 7: Build Docker image ────────────────────────────
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:${{ github.sha }} .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest
+          IMAGE_REPO="$(echo "${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops" | tr '[:upper:]' '[:lower:]')"
+          docker build -t ${IMAGE_REPO}:${{ github.sha }} .
+          docker tag ${IMAGE_REPO}:${{ github.sha }} ${IMAGE_REPO}:latest
 
       # ── Step 8: Push to Docker Hub ────────────────────────────
       - name: Login and push to Docker Hub
         run: |
+          IMAGE_REPO="$(echo "${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops" | tr '[:upper:]' '[:lower:]')"
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:${{ github.sha }}
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest
+          docker push ${IMAGE_REPO}:${{ github.sha }}
+          docker push ${IMAGE_REPO}:latest
