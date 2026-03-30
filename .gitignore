@@ -55,9 +55,6 @@ models/*.pth
 # Metrics output
 metrics/
 
-# Docker
-.dockerignore
-
 # AWS
 .aws/
 *.pem

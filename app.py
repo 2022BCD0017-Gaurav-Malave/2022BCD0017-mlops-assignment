@@ -1,5 +1,5 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, conlist
 import joblib
 import numpy as np
 import os
@@ -29,7 +29,7 @@ def load_model():
 
 
 class PredictRequest(BaseModel):
-    features: list[float] 
+    features: conlist(float, min_length=4, max_length=4)
 
 
 @app.get("/")
@@ -46,12 +46,15 @@ def health():
 @app.post("/predict")
 def predict(request: PredictRequest):
     if model is None:
-        return {"error": "Model not loaded", "name": STUDENT_NAME, "roll_no": ROLL_NO}
+        raise HTTPException(status_code=503, detail="Model not loaded. Train first.")
 
-    features   = np.array(request.features).reshape(1, -1)
-    scaled     = scaler.transform(features)
-    prediction = model.predict(scaled)[0]
-    proba      = model.predict_proba(scaled)[0].tolist()
+    try:
+        features = np.array(request.features, dtype=float).reshape(1, -1)
+        scaled = scaler.transform(features)
+        prediction = model.predict(scaled)[0]
+        proba = model.predict_proba(scaled)[0].tolist()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Inference failed: {exc}") from exc
 
     labels = {0: "Setosa", 1: "Versicolor", 2: "Virginica"}
 

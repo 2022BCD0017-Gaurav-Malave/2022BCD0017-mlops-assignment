@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import mlflow
 import mlflow.sklearn 
+from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -15,11 +16,33 @@ from sklearn.metrics import accuracy_score, f1_score
 STUDENT_NAME = "Gaurav Malave"      
 ROLL_NO      = "2022BCD0017"   
 
-os.environ["MLFLOW_TRACKING_URI"]      = os.getenv("MLFLOW_TRACKING_URI", "mlruns")
-os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "2022BCD0017-Gaurav-Malave")
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD", "344b8db17a5bbf283371538f89982219960ad5cf")
+os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI", "mlruns")
+if os.getenv("MLFLOW_TRACKING_USERNAME"):
+    os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "")
+if os.getenv("MLFLOW_TRACKING_PASSWORD"):
+    os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD", "")
 
 mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+
+
+def ensure_local_datasets():
+    os.makedirs("data", exist_ok=True)
+    v1_path = "data/iris_v1.csv"
+    v2_path = "data/iris_v2.csv"
+
+    if os.path.exists(v1_path) and os.path.exists(v2_path):
+        return
+
+    iris = load_iris(as_frame=True)
+    df = iris.frame.rename(columns={"target": "target"})
+    feature_cols = [c for c in df.columns if c != "target"]
+
+    # Version 1: first 80 rows, first 3 features + target
+    v1_cols = feature_cols[:3] + ["target"]
+    df.iloc[:80][v1_cols].to_csv(v1_path, index=False)
+
+    # Version 2: full dataset, all features + target
+    df[feature_cols + ["target"]].to_csv(v2_path, index=False)
 
 def load_data(csv_path, feature_set="all"):
     df = pd.read_csv(csv_path)
@@ -129,6 +152,7 @@ if __name__ == "__main__":
 
     os.makedirs("models",  exist_ok=True)
     os.makedirs("metrics", exist_ok=True)
+    ensure_local_datasets()
 
     runs_config = [
         # Run 1: V1, RandomForest, all features, base config

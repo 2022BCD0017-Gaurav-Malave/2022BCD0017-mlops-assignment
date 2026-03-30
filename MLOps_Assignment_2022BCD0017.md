@@ -65,10 +65,8 @@
 ```
 2022BCD0017-mlops-assignment/
 ├── data/
-│   ├── iris_v1.csv            # Version 1: 80 samples, 3 features
-│   ├── iris_v1.csv.dvc        # DVC tracking file for V1
-│   ├── iris_v2.csv            # Version 2: 150 samples, 4 features
-│   └── iris_v2.csv.dvc        # DVC tracking file for V2
+│   ├── iris_v1.csv            # Generated if missing (80 samples, 3 features)
+│   └── iris_v2.csv            # Generated if missing (150 samples, 4 features)
 ├── models/
 │   ├── model.pkl              # Trained model artifact
 │   └── scaler.pkl             # StandardScaler artifact
@@ -78,7 +76,7 @@
 │   └── workflows/
 │       └── mlops.yml          # GitHub Actions CI/CD pipeline
 ├── .dvc/
-│   └── config                 # DVC remote configuration
+│   └── config                 # DVC remote URL only (no secrets)
 ├── train.py                   # Training script with MLflow logging
 ├── app.py                     # FastAPI inference API
 ├── generate_data.py           # Script to create dataset versions
@@ -129,8 +127,8 @@ An AWS S3 bucket was created named `<rollno>-mlops-dvc`. DVC was configured to u
 
 ```bash
 dvc remote add -d myremote s3://<rollno>-mlops-dvc/dvcstore
-dvc remote modify myremote access_key_id     <AWS_ACCESS_KEY_ID>
-dvc remote modify myremote secret_access_key <AWS_SECRET_ACCESS_KEY>
+# Do not store credentials in .dvc/config
+# Use environment variables or CI secrets at runtime instead
 git add .dvc/config
 git commit -m "Configure S3 as DVC remote"
 ```

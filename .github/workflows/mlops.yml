@@ -8,7 +8,7 @@ on:
 
 jobs:
   mlops-pipeline:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       # ── Step 1: Checkout code ──────────────────────────────────
@@ -27,23 +27,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ── Step 4: Configure DVC remote credentials ───────────────
-      - name: Configure DVC credentials
-        run: |
-          dvc remote modify myremote access_key_id     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          dvc remote modify myremote secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          dvc remote modify myremote session_token     ${{ secrets.AWS_SESSION_TOKEN }}
-
-      # ── Step 5: Pull data from DVC/S3 ─────────────────────────
-
-      - name: Pull data with DVC
+      # ── Step 4: Pull data from DVC/S3 when pointers are present ─────────
+      - name: Pull data with DVC (optional)
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_SESSION_TOKEN:     ${{ secrets.AWS_SESSION_TOKEN }}
-        run: dvc pull
+        run: |
+          if ls data/*.dvc >/dev/null 2>&1; then
+            dvc pull
+          else
+            echo "No DVC pointer files found; training script will generate local datasets."
+          fi
 
-      # ── Step 6: Run all 5 training runs with MLflow ───────────
+      # ── Step 5: Run all 5 training runs with MLflow ───────────
       - name: Run MLflow experiments
         env:
           MLFLOW_TRACKING_URI:      ${{ secrets.MLFLOW_TRACKING_URI }}
@@ -51,20 +48,22 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: python train.py --run 0
 
-      # ── Step 7: Upload metrics as artifact ────────────────────
+      # ── Step 6: Upload metrics as artifact ────────────────────
       - name: Upload metrics
         uses: actions/upload-artifact@v4
         with:
           name: experiment-metrics
           path: metrics/
 
-      # ── Step 8: Build Docker image ────────────────────────────
+      # ── Step 7: Build Docker image ────────────────────────────
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:${{ github.sha }} .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest
 
-      # ── Step 9: Push to Docker Hub ────────────────────────────
+      # ── Step 8: Push to Docker Hub ────────────────────────────
       - name: Login and push to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.ROLL_NO }}-mlops:latest

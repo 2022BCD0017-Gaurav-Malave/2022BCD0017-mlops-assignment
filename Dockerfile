@@ -3,16 +3,11 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Copy requirements and install
-COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt ./
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-
-# Copy all application files
-COPY app.py .
-COPY train.py .
-COPY models/ ./models/
-COPY data/ ./data/
+# Copy core application files only (model/data are runtime artifacts)
+COPY app.py train.py ./
 
 EXPOSE 8000
 
